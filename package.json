@@ -1,11 +1,12 @@
 {
-    "name" : "dvotc-websocket-node",
+    "name": "dvotc-websocket-node",
     "type": "module",
     "version": "1.0.0",
-    "main" : "lib.js",
+    "main": "lib.js",
     "license": "MIT",
     "dependencies": {
         "dotenv": "^8.2.0",
-        "simple-pubsub": "^1.0.4"
+        "simple-pubsub": "^1.0.4",
+        "uuid": "^8.2.0"
     }
 }
