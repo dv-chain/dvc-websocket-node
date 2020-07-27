@@ -28,51 +28,42 @@ function pricesCallback(symbol, levels) {
 }
 
 async function start() {
-    var dvotc = new DVOTC({
-        url : WS_URL,
-        key : API_KEY,
-        secret: API_SECRET,
-    });
-
-    await dvotc.sessionCreated();
-
-    // await dvotc.getUserInfo();
-    // await dvotc.getUserLimits();
-
-    let symbols = await dvotc.getAvailableSymbols();
-
-    symbols.forEach(symbol => {
-        let unsubToken = dvotc.subscribeLevels(symbol, pricesCallback);    
-        subscriptions.push(unsubToken);
-    });
-
-    setInterval(async ()=> {
-        console.log("Sending order");
-        try {
-            let result = await dvotc.placeOrder({ 
-                "quoteId": uuid.v4(), // not required for limit orders, this should be the actuall quote id received, just sending uuid for sample to make it fail
-                "orderType" : "market", //quote id is mandatory for order type market
-                "side": "Sell",
-                "qty": 1,
-                "price": 55527.51,
-                "asset": "XRP", 
-                "clientTag" : "c54aca46-d166-4a98-bdc3-b3169cbba622",
-                "counterAsset": "USD"
-            });
-            console.log("result ", result);
-        } catch(err) {
-            console.log("Failed to palce order");
-            console.error(err);
-        }
-
-    }, 5000);
-
     try {
-        let result = await dvotc.cancelOrder(uuid.v4()) //send actual orderid instead of uuid.v4()
-        console.log(result);
-    }catch(err) {
+        var dvotc = new DVOTC({
+            url : WS_URL,
+            key : API_KEY,
+            secret: API_SECRET,
+        });
+
+        await dvotc.sessionCreated();
+
+        // let sessionUser = await dvotc.getUserInfo();
+        // let userLimits = await dvotc.getUserLimits();
+        let symbols = await dvotc.getAvailableSymbols();
+
+        symbols.forEach(symbol => {
+            let unsubToken = dvotc.subscribeLevels(symbol, pricesCallback);    
+            subscriptions.push(unsubToken);
+        });
+    
+        let order = await dvotc.placeOrder({ 
+            "quoteId": uuid.v4(), // not required for limit orders, this should be the actuall quote id received, just sending uuid for sample to make it fail
+            "orderType" : "market", //quote id is mandatory for order type market
+            "side": "Sell",
+            "qty": 1,
+            "price": 55527.51,
+            "asset": "XRP", 
+            "clientTag" : "c54aca46-d166-4a98-bdc3-b3169cbba622",
+            "counterAsset": "USD"
+        });
+        console.log("result ", result);
+
+        let cancelStatus = await dvotc.cancelOrder(order._id);
+
+    } catch(err) {
+        console.log("Failed to palce order");
         console.error(err);
     }
-    
 }
+
 start();

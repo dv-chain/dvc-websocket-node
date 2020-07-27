@@ -1,4 +1,5 @@
 {
+    "name" : "dvotc-websocket-node",
     "type": "module",
     "dependencies": {
         "dotenv": "^8.2.0",
