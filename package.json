@@ -1,0 +1,7 @@
+{
+    "type": "module",
+    "dependencies": {
+        "dotenv": "^8.2.0",
+        "simple-pubsub": "^1.0.4"
+    }
+}
