@@ -1,12 +1,28 @@
 {
     "name": "dvotc-websocket-node",
-    "type": "module",
     "version": "1.0.1",
-    "main": "lib.js",
+    "main": "cjs.js",
+    "module": "esm.js",
+    "sideEffects": false,
     "license": "MIT",
+    "browser": "browser.js",
+    "scripts": {
+        "prebuild": "rimraf dist",
+        "build": "rollup -c"
+    },
     "dependencies": {
+        "bufferutil": "^4.0.1",
         "dotenv": "^8.2.0",
         "simple-pubsub": "^1.0.4",
-        "uuid": "^8.2.0"
+        "utf-8-validate": "^5.0.2",
+        "uuid": "^8.2.0",
+        "ws": "^7.3.1"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^14.0.0",
+        "@rollup/plugin-node-resolve": "^8.4.0",
+        "rimraf": "^3.0.2",
+        "rollup": "^2.23.0",
+        "rollup-plugin-node-polyfills": "^0.2.1"
     }
 }
