@@ -194,7 +194,11 @@ function ReconnectingWebSocket (url, protocols, options) {
     }
   
     this.open = function (reconnectAttempt) {
-      ws = new WebSocket(self.url, { headers: getHeaders({key: this.key, secret: this.secret}) } || []);
+      let headers;
+      if(this.key && this.secret) {
+        headers = { headers: getHeaders({key: this.key, secret: this.secret}) };
+      }
+      ws = new WebSocket(self.url, headers);
       ws.binaryType = this.binaryType;
   
       if (reconnectAttempt) {
@@ -413,6 +417,7 @@ class DVOTC {
         this.secret = secret;
         this._requestId = 10;
         this._levelPublisher = new PubSub();
+        this._orderStatusPublisher = new PubSub();
         this._connectionPromises = new Array();
         this._websocketConnected = false;
         this._initialize();
@@ -424,7 +429,7 @@ class DVOTC {
     }
 
     async _initialize() {
-        
+
         this._conn = getConnection(this.url, { key : this.key, secret: this.secret });
 
         this._connectedPromise = new Promise((resolve, reject)=> {
@@ -436,7 +441,8 @@ class DVOTC {
                 });
                 let levelSubscriptions = this._levelPublisher.status();
                 this._subscribeSubscriptions(levelSubscriptions, 'levels');
-                this._subscribeOrderUpdates();
+                let orderstatusSubscriptions = this._orderStatusPublisher.status();
+                this._subscribeSubscriptions(orderstatusSubscriptions, 'order-updates');
                 resolve();
             };
         });
@@ -446,7 +452,7 @@ class DVOTC {
         });
 
         this._conn.on('order-updates', (topic, data) =>{
-            console.log("Received order updates ", topic, data);
+            this._orderStatusPublisher.publish(topic, data);
         });
 
         this._conn.on('batch-updates', (topic, data) =>{
@@ -465,6 +471,14 @@ class DVOTC {
             this._unSubscribeLevelsServer(topic);
         });
 
+        this._orderStatusPublisher.on('entry',  (topic) => {
+            this._subscribeOrderStatusServer(topic);
+        });
+        
+        this._orderStatusPublisher.on('empty',  (topic) => {
+            this._unsubscribeOrderStatusServer(topic);
+        });
+
         await this._connectedPromise;
         console.log("Ready");
         setInterval(this._sendPing.bind(this), 5000);
@@ -479,14 +493,23 @@ class DVOTC {
         });
     }
 
-    _subscribeOrderUpdates(topic="#") {
+    _subscribeOrderStatusServer(topic) {
         this._conn.sendMessage({
             type: "subscribe",
             event: "order-updates",
-            topic : `order/${topic}`,
+            topic : topic,
         });
         console.log(`subscribed order updates for ${topic}`);
     }
+
+    _unsubscribeOrderStatusServer(topic) {
+        this._conn.sendMessage({
+            type: "unsubscribe",
+            event: "order-updates",
+            topic
+        });
+        console.log(`unsubscribed order updates for ${topic}`);
+    };
 
     
     _subscribeLevelsServer(topic) {
@@ -542,6 +565,15 @@ class DVOTC {
         return true;
     };
 
+    subscribeOrderStatus(topic, callback) {
+        return this._orderStatusPublisher.subscribe(topic, callback).toString();
+    }
+    
+    unSubscribeOrderStatus (subscriptionId) {
+        this._orderStatusPublisher.unsubscribe(subscriptionId);
+        return true;
+    };
+
     sendPromise(message) {
         return new Promise((resolve, reject)=> {
             this._conn.sendMessage(message, function(type,topic,data) {
@@ -556,7 +588,7 @@ class DVOTC {
     async sendRequest ({ topic, data }) {
         var requestId = this._getRequestID();
         var req = {
-            type : 'request',
+            type : 'request-response',
             topic: topic,
             event: requestId,
             data

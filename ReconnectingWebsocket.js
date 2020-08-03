@@ -194,7 +194,11 @@ function ReconnectingWebSocket (url, protocols, options) {
     }
   
     this.open = function (reconnectAttempt) {
-      ws = new WebSocket(self.url, { headers: getHeaders({key: this.key, secret: this.secret}) } || [])
+      let headers;
+      if(this.key && this.secret) {
+        headers = { headers: getHeaders({key: this.key, secret: this.secret}) }
+      }
+      ws = new WebSocket(self.url, headers);
       ws.binaryType = this.binaryType
   
       if (reconnectAttempt) {

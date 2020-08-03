@@ -1,28 +1,29 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import builtins from 'rollup-plugin-node-builtins';
 import pkg from './package.json';
-import nodePolyfills from 'rollup-plugin-node-polyfills';
 
 var dist = `dist`;
 export default  [
 	// browser-friendly UMD build
-	// {
-	// 	input: './lib.js',
-	// 	output: {
-	// 		name: 'DVOTC',
-	// 		file: pkg.browser,
-    //         format: 'umd',
-    //         globals: {
-    //             "ws" : 'Websocket',
-    //             "simple-pubsub" : 'SimplePubSub'
-    //         }
-	// 	},
-	// 	plugins: [
-    //         nodePolyfills(),
-	// 		resolve(), // so Rollup can find `ms`
-	// 		commonjs() // so Rollup can convert `ms` to an ES module
-	// 	]
-	// },
+	{
+		input: './lib.js',
+		output: {
+			name: 'DVOTC',
+			file: pkg.browser,
+			format: 'iife',
+			globals: {
+				"ws" : 'WebSocket',
+				"crypto" : "crypto"
+			},
+		},
+		external: ['ws'],
+		plugins: [
+			commonjs(), // so Rollup can convert `ms` to an ES module
+			resolve({ preferBuiltins: false, browser: true }), // so Rollup can find `ms`
+			builtins(),
+		]
+	},
 
 	// CommonJS (for Node) and ES module (for bundlers) build.
 	// (We could have three entries in the configuration array
