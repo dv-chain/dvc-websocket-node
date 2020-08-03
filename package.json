@@ -1,6 +1,6 @@
 {
     "name": "dvotc-websocket-node",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "main": "cjs.js",
     "module": "esm.js",
     "sideEffects": false,
